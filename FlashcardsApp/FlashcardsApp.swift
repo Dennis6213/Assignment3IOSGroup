@@ -6,6 +6,8 @@ struct FlashcardsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                }
         }
         .modelContainer(for: [Deck.self, Card.self, ReviewLog.self])
     }
