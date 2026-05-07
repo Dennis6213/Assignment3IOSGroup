@@ -71,6 +71,36 @@ final class SM2SchedulerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(result.newEaseFactor, 1.3)
     }
 
+    func testDueDateAdvancedByInterval() {
+        let card = makeCard(interval: 6, easeFactor: 2.5, repetitions: 2)
+        let result = SM2Scheduler.schedule(card: card, grade: .good, now: referenceDate)
+
+        let expectedDate = Calendar.current.date(byAdding: .day, value: result.newInterval, to: referenceDate)!
+        XCTAssertEqual(result.nextDueDate, expectedDate)
+    }
+
+    func testPreviewIntervalsReturnsAllGrades() {
+        let card = makeCard(interval: 6, easeFactor: 2.5, repetitions: 2)
+        let previews = SM2Scheduler.previewIntervals(for: card, now: referenceDate)
+
+        XCTAssertEqual(previews.count, 4)
+        XCTAssertNotNil(previews[.again])
+        XCTAssertNotNil(previews[.hard])
+        XCTAssertNotNil(previews[.good])
+        XCTAssertNotNil(previews[.easy])
+    }
+
+    func testApplyMutatesCard() {
+        let card = makeCard(interval: 0, easeFactor: 2.5, repetitions: 0)
+        let result = SM2Scheduler.schedule(card: card, grade: .good, now: referenceDate)
+        SM2Scheduler.apply(result: result, to: card)
+
+        XCTAssertEqual(card.interval, result.newInterval)
+        XCTAssertEqual(card.easeFactor, result.newEaseFactor)
+        XCTAssertEqual(card.repetitions, result.newRepetitions)
+        XCTAssertEqual(card.dueDate, result.nextDueDate)
+    }
+
     private func makeCard(
         interval: Int = 0,
         easeFactor: Double = 2.5,
