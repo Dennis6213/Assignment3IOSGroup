@@ -11,6 +11,7 @@ struct CardEditorView: View {
     @State private var back: String = ""
     @State private var hint: String = ""
     @State private var showHint: Bool = false
+    @State private var saveError: String?
 
     private var isEditing: Bool { card != nil }
 
@@ -76,6 +77,14 @@ struct CardEditorView: View {
                         .bold()
                 }
             }
+            .alert("Save Failed", isPresented: .init(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) { saveError = nil }
+            } message: {
+                Text(saveError ?? "")
+            }
             .onAppear {
                 if let card {
                     front = card.front
@@ -107,8 +116,12 @@ struct CardEditorView: View {
             modelContext.insert(newCard)
         }
 
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 }
 

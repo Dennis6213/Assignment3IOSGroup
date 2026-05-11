@@ -141,25 +141,11 @@ struct LeaderboardView: View {
     }
 
     private func computeMyStats() -> (cardsReviewed: Int, streak: Int, mastered: Int) {
-        let cardsReviewed = allReviews.count
-
-        let calendar = Calendar.current
-        var streak = 0
-        var checkDate = calendar.startOfDay(for: Date())
-        let todayReviews = allReviews.filter { calendar.isDate($0.date, inSameDayAs: checkDate) }
-        if todayReviews.isEmpty {
-            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate
-        }
-        while true {
-            let dayReviews = allReviews.filter { calendar.isDate($0.date, inSameDayAs: checkDate) }
-            if dayReviews.isEmpty { break }
-            streak += 1
-            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate
-        }
-
-        let mastered = allDecks.flatMap(\.cards).filter { $0.interval >= 21 }.count
-
-        return (cardsReviewed, streak, mastered)
+        (
+            cardsReviewed: allReviews.count,
+            streak: StudyStatsService.currentStreak(from: allReviews),
+            mastered: StudyStatsService.masteredCount(from: allDecks)
+        )
     }
 
     private func rankEmoji(_ rank: Int) -> String {

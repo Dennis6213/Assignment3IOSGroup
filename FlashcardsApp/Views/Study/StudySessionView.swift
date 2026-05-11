@@ -9,6 +9,7 @@ struct StudySessionView: View {
     var practiceAll: Bool = false
 
     @Query private var userProfiles: [UserProfile]
+    @Query(sort: \ReviewLog.date, order: .reverse) private var allReviews: [ReviewLog]
 
     @State private var dueCards: [Card] = []
     @State private var currentIndex: Int = 0
@@ -319,32 +320,17 @@ struct StudySessionView: View {
 
         let event = ActivityEvent(
             userName: userName,
-            eventType: "completed_session",
+            type: .completedSession,
             detail: "Completed \(grades.count) cards in \"\(deck.name)\" with \(accuracy)% accuracy",
             isCurrentUser: true
         )
         modelContext.insert(event)
 
-        let calendar = Calendar.current
-        var streak = 0
-        var checkDate = calendar.startOfDay(for: Date())
-        while true {
-            let dayStart = checkDate
-            guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { break }
-            let descriptor = FetchDescriptor<ReviewLog>(
-                predicate: #Predicate { $0.date >= dayStart && $0.date < dayEnd }
-            )
-            let count = (try? modelContext.fetchCount(descriptor)) ?? 0
-            if count == 0 { break }
-            streak += 1
-            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
-            checkDate = previousDay
-        }
-
+        let streak = StudyStatsService.currentStreak(from: allReviews)
         if streak > 0 && streak % 7 == 0 {
             let streakEvent = ActivityEvent(
                 userName: userName,
-                eventType: "streak_milestone",
+                type: .streakMilestone,
                 detail: "Reached a \(streak)-day study streak! 🔥",
                 isCurrentUser: true
             )

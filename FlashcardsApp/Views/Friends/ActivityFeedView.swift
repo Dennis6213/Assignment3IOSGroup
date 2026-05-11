@@ -85,7 +85,7 @@ struct ActivityRowView: View {
                     .fill(colorForEvent.opacity(0.15))
                     .frame(width: 40, height: 40)
 
-                Image(systemName: event.icon)
+                Image(systemName: event.type.icon)
                     .font(.system(size: 16))
                     .foregroundStyle(colorForEvent)
             }
@@ -119,12 +119,11 @@ struct ActivityRowView: View {
     }
 
     private var colorForEvent: Color {
-        switch event.iconColor {
-        case "green": return .green
-        case "blue": return .blue
-        case "orange": return .orange
-        case "yellow": return .yellow
-        default: return .gray
+        switch event.type {
+        case .completedSession: return .green
+        case .newDeck:          return .blue
+        case .streakMilestone:  return .orange
+        case .masteredCard:     return .yellow
         }
     }
 

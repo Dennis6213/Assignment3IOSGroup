@@ -7,6 +7,7 @@ struct DeckListView: View {
     @State private var showingAddDeck = false
     @State private var newDeckName = ""
     @State private var newDeckDescription = ""
+    @State private var createError: String?
 
     var body: some View {
         NavigationStack {
@@ -38,6 +39,14 @@ struct DeckListView: View {
                     createDeck()
                 }
                 .disabled(newDeckName.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            .alert("Couldn't Create Deck", isPresented: .init(
+                get: { createError != nil },
+                set: { if !$0 { createError = nil } }
+            )) {
+                Button("OK", role: .cancel) { createError = nil }
+            } message: {
+                Text(createError ?? "")
             }
         }
     }
@@ -73,12 +82,21 @@ struct DeckListView: View {
         let name = newDeckName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return }
 
+        if decks.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+            createError = "A deck named \"\(name)\" already exists. Choose a different name."
+            return
+        }
+
         let deck = Deck(name: name, deckDescription: newDeckDescription.trimmingCharacters(in: .whitespaces))
         modelContext.insert(deck)
-        try? modelContext.save()
 
-        newDeckName = ""
-        newDeckDescription = ""
+        do {
+            try modelContext.save()
+            newDeckName = ""
+            newDeckDescription = ""
+        } catch {
+            createError = error.localizedDescription
+        }
     }
 
     private func deleteDecks(at offsets: IndexSet) {
