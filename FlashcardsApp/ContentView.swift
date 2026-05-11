@@ -23,6 +23,8 @@ struct ContentView: View {
 
 struct SettingsView: View {
     @State private var showingImport = false
+    @State private var remindersEnabled = false
+    @State private var reminderTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
 
     var body: some View {
         NavigationStack {
@@ -32,6 +34,41 @@ struct SettingsView: View {
                         showingImport = true
                     } label: {
                         Label("Import from JSON", systemImage: "square.and.arrow.down")
+                    }
+                }
+
+                Section("Reminders") {
+                    Toggle(isOn: $remindersEnabled) {
+                        Label("Daily Reminder", systemImage: "bell.fill")
+                    }
+                    .onChange(of: remindersEnabled) { _, enabled in
+                        if enabled {
+                            Task {
+                                let granted = await ReminderScheduler.requestPermission()
+                                if granted {
+                                    let components = Calendar.current.dateComponents([.hour, .minute], from: reminderTime)
+                                    ReminderScheduler.scheduleDailyReminder(
+                                        hour: components.hour ?? 9,
+                                        minute: components.minute ?? 0
+                                    )
+                                } else {
+                                    remindersEnabled = false
+                                }
+                            }
+                        } else {
+                            ReminderScheduler.cancelReminders()
+                        }
+                    }
+
+                    if remindersEnabled {
+                        DatePicker("Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
+                            .onChange(of: reminderTime) { _, newTime in
+                                let components = Calendar.current.dateComponents([.hour, .minute], from: newTime)
+                                ReminderScheduler.scheduleDailyReminder(
+                                    hour: components.hour ?? 9,
+                                    minute: components.minute ?? 0
+                                )
+                            }
                     }
                 }
 
