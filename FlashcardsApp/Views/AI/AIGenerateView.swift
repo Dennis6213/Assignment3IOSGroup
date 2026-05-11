@@ -234,6 +234,7 @@ struct AzureSettingsView: View {
     @AppStorage("azure_endpoint") private var endpoint = ""
     @AppStorage("azure_api_key") private var apiKey = ""
     @AppStorage("azure_deployment") private var deployment = ""
+    @State private var showApiKey = false
 
     var body: some View {
         NavigationStack {
@@ -258,9 +259,25 @@ struct AzureSettingsView: View {
                 }
 
                 Section("API Key") {
-                    SecureField("Enter your API key", text: $apiKey)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    HStack {
+                        if showApiKey {
+                            TextField("Enter your API key", text: $apiKey)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                        } else {
+                            SecureField("Enter your API key", text: $apiKey)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                        }
+
+                        Button {
+                            showApiKey.toggle()
+                        } label: {
+                            Image(systemName: showApiKey ? "eye.slash.fill" : "eye.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
 
                 Section("Deployment Name") {
