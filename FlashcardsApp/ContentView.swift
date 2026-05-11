@@ -23,6 +23,8 @@ struct ContentView: View {
 
 struct SettingsView: View {
     @State private var showingImport = false
+    @State private var showingAIGenerate = false
+    @State private var showingAzureSettings = false
     @State private var remindersEnabled = false
     @State private var reminderTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
 
@@ -31,9 +33,24 @@ struct SettingsView: View {
             List {
                 Section("Flashcards") {
                     Button {
+                        showingAIGenerate = true
+                    } label: {
+                        Label("Generate with AI", systemImage: "sparkles")
+                    }
+                    .tint(.purple)
+
+                    Button {
                         showingImport = true
                     } label: {
                         Label("Import from JSON", systemImage: "square.and.arrow.down")
+                    }
+                }
+
+                Section("AI Configuration") {
+                    Button {
+                        showingAzureSettings = true
+                    } label: {
+                        Label("Azure OpenAI Settings", systemImage: "cloud.fill")
                     }
                 }
 
@@ -80,6 +97,12 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .sheet(isPresented: $showingImport) {
                 JSONImportView()
+            }
+            .sheet(isPresented: $showingAIGenerate) {
+                AIGenerateView()
+            }
+            .sheet(isPresented: $showingAzureSettings) {
+                AzureSettingsView()
             }
         }
     }
