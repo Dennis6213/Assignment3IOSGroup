@@ -7,6 +7,7 @@ struct DeckDetailView: View {
     @State private var showingAddCard = false
     @State private var showingStudySession = false
     @State private var showingPracticeAll = false
+    @State private var showingShareDeck = false
     @State private var editingCard: Card?
 
     var sortedCards: [Card] {
@@ -97,6 +98,13 @@ struct DeckDetailView: View {
                     Image(systemName: "plus")
                 }
             }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingShareDeck = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
         }
         .sheet(isPresented: $showingAddCard) {
             CardEditorView(deck: deck, card: nil)
@@ -109,6 +117,9 @@ struct DeckDetailView: View {
         }
         .fullScreenCover(isPresented: $showingPracticeAll) {
             StudySessionView(deck: deck, practiceAll: true)
+        }
+        .sheet(isPresented: $showingShareDeck) {
+            ShareDeckView(deck: deck)
         }
     }
 

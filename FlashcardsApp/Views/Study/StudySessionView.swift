@@ -8,6 +8,9 @@ struct StudySessionView: View {
     let deck: Deck
     var practiceAll: Bool = false
 
+    @Query private var userProfiles: [UserProfile]
+    @Query(sort: \ReviewLog.date, order: .reverse) private var allReviews: [ReviewLog]
+
     @State private var dueCards: [Card] = []
     @State private var currentIndex: Int = 0
     @State private var isFlipped: Bool = false
@@ -259,7 +262,8 @@ struct StudySessionView: View {
             withAnimation {
                 currentIndex += 1
             }
-        } else {
+         } else {
+            logSessionActivity()
             withAnimation {
                 sessionComplete = true
             }
@@ -308,9 +312,36 @@ struct StudySessionView: View {
                 .font(.subheadline.bold())
         }
     }
+
+    private func logSessionActivity() {
+        let userName = userProfiles.first?.displayName ?? "Me"
+        let correct = grades.filter { $0 != .again }.count
+        let accuracy = grades.isEmpty ? 0 : Int(Double(correct) / Double(grades.count) * 100)
+
+        let event = ActivityEvent(
+            userName: userName,
+            type: .completedSession,
+            detail: "Completed \(grades.count) cards in \"\(deck.name)\" with \(accuracy)% accuracy",
+            isCurrentUser: true
+        )
+        modelContext.insert(event)
+
+        let streak = StudyStatsService.currentStreak(from: allReviews)
+        if streak > 0 && streak % 7 == 0 {
+            let streakEvent = ActivityEvent(
+                userName: userName,
+                type: .streakMilestone,
+                detail: "Reached a \(streak)-day study streak! 🔥",
+                isCurrentUser: true
+            )
+            modelContext.insert(streakEvent)
+        }
+
+        try? modelContext.save()
+    }
 }
 
 #Preview {
     StudySessionView(deck: Deck(name: "Preview"))
-        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self], inMemory: true)
+        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self, UserProfile.self, Friend.self, SharedDeck.self, ActivityEvent.self], inMemory: true)
 }
