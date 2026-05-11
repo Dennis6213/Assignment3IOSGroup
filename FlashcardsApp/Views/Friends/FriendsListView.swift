@@ -10,33 +10,32 @@ struct FriendsListView: View {
     @State private var showingAddFriend = false
     @State private var showingMyCode = false
     @State private var showingSharedDecks = false
+    @State private var selectedTab: FriendsTab = .friends
+
+    enum FriendsTab: String, CaseIterable {
+        case friends = "Friends"
+        case activity = "Activity"
+    }
 
     private var myProfile: UserProfile? { userProfiles.first }
 
     var body: some View {
         NavigationStack {
-            List {
-                myProfileSection
-
-                if !sharedDecks.isEmpty {
-                    sharedDecksSection
+            VStack(spacing: 0) {
+                Picker("View", selection: $selectedTab) {
+                    ForEach(FriendsTab.allCases, id: \.self) { tab in
+                        Text(tab.rawValue).tag(tab)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.top, 8)
 
-                if friends.isEmpty {
-                    Section {
-                        ContentUnavailableView {
-                            Label("No Friends Yet", systemImage: "person.2")
-                        } description: {
-                            Text("Add friends by sharing your friend code or entering theirs.")
-                        }
-                    }
-                } else {
-                    Section("Friends (\(friends.count))") {
-                        ForEach(friends) { friend in
-                            FriendRowView(friend: friend)
-                        }
-                        .onDelete(perform: deleteFriends)
-                    }
+                switch selectedTab {
+                case .friends:
+                    friendsContent
+                case .activity:
+                    ActivityFeedView()
                 }
             }
             .navigationTitle("Friends")
@@ -57,6 +56,33 @@ struct FriendsListView: View {
             }
             .onAppear {
                 ensureProfileExists()
+            }
+        }
+    }
+
+    private var friendsContent: some View {
+        List {
+            myProfileSection
+
+            if !sharedDecks.isEmpty {
+                sharedDecksSection
+            }
+
+            if friends.isEmpty {
+                Section {
+                    ContentUnavailableView {
+                        Label("No Friends Yet", systemImage: "person.2")
+                    } description: {
+                        Text("Add friends by sharing your friend code or entering theirs.")
+                    }
+                }
+            } else {
+                Section("Friends (\(friends.count))") {
+                    ForEach(friends) { friend in
+                        FriendRowView(friend: friend)
+                    }
+                    .onDelete(perform: deleteFriends)
+                }
             }
         }
     }
@@ -96,58 +122,6 @@ struct FriendsListView: View {
                     showingMyCode = true
                 } label: {
                     Label("Share My Friend Code", systemImage: "square.and.arrow.up")
-    @Query private var friends: [Friend]
-    @State private var selectedTab: FriendsTab = .friends
-
-    enum FriendsTab: String, CaseIterable {
-        case friends = "Friends"
-        case activity = "Activity"
-    }
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                Picker("View", selection: $selectedTab) {
-                    ForEach(FriendsTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.top, 8)
-
-                switch selectedTab {
-                case .friends:
-                    friendsContent
-                case .activity:
-                    ActivityFeedView()
-                }
-            }
-            .navigationTitle("Friends")
-        }
-    }
-
-    private var friendsContent: some View {
-        Group {
-            if friends.isEmpty {
-                ContentUnavailableView {
-                    Label("No Friends Yet", systemImage: "person.2")
-                } description: {
-                    Text("Connect with friends to see their activity and compete on leaderboards.")
-                }
-            } else {
-                List {
-                    ForEach(friends) { friend in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(friend.displayName)
-                                .font(.subheadline.bold())
-                            if let lastActive = friend.lastActiveDate {
-                                Text("Active \(lastActive, style: .relative) ago")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
                 }
             }
         }
