@@ -6,11 +6,15 @@ struct AzureOpenAIConfig {
     let deploymentName: String
     let apiVersion: String
 
-    init(endpoint: String, apiKey: String, deploymentName: String, apiVersion: String = "2024-02-01") {
-        self.endpoint = endpoint.trimmingCharacters(in: CharacterSet(charactersIn: "/ "))
+    init(endpoint: String, apiKey: String, deploymentName: String, apiVersion: String = "2024-10-21") {
+        var cleaned = endpoint.trimmingCharacters(in: CharacterSet(charactersIn: "/ "))
+        while cleaned.hasSuffix("/openai") {
+            cleaned = String(cleaned.dropLast("/openai".count))
+        }
+        self.endpoint = cleaned
         self.apiKey = apiKey.trimmingCharacters(in: .whitespaces)
         self.deploymentName = deploymentName.trimmingCharacters(in: .whitespaces)
-        self.apiVersion = apiVersion
+        self.apiVersion = apiVersion.trimmingCharacters(in: .whitespaces)
     }
 
     var isValid: Bool {
@@ -21,6 +25,7 @@ struct AzureOpenAIConfig {
         UserDefaults.standard.set(endpoint, forKey: "azure_endpoint")
         UserDefaults.standard.set(apiKey, forKey: "azure_api_key")
         UserDefaults.standard.set(deploymentName, forKey: "azure_deployment")
+        UserDefaults.standard.set(apiVersion, forKey: "azure_api_version")
     }
 
     static func load() -> AzureOpenAIConfig? {
@@ -30,13 +35,15 @@ struct AzureOpenAIConfig {
               !endpoint.isEmpty, !apiKey.isEmpty, !deployment.isEmpty else {
             return nil
         }
-        return AzureOpenAIConfig(endpoint: endpoint, apiKey: apiKey, deploymentName: deployment)
+        let version = UserDefaults.standard.string(forKey: "azure_api_version") ?? "2024-10-21"
+        return AzureOpenAIConfig(endpoint: endpoint, apiKey: apiKey, deploymentName: deployment, apiVersion: version)
     }
 
     static func clear() {
         UserDefaults.standard.removeObject(forKey: "azure_endpoint")
         UserDefaults.standard.removeObject(forKey: "azure_api_key")
         UserDefaults.standard.removeObject(forKey: "azure_deployment")
+        UserDefaults.standard.removeObject(forKey: "azure_api_version")
     }
 }
 
@@ -44,7 +51,7 @@ enum AIServiceError: LocalizedError {
     case notConfigured
     case invalidURL
     case networkError(String)
-    case apiError(statusCode: Int, message: String)
+    case apiError(statusCode: Int, message: String, url: String = "")
     case invalidResponse
     case parsingFailed(String)
 
@@ -56,8 +63,9 @@ enum AIServiceError: LocalizedError {
             return "Invalid Azure endpoint URL."
         case .networkError(let message):
             return "Network error: \(message)"
-        case .apiError(let code, let message):
-            return "API error (\(code)): \(message)"
+        case .apiError(let code, let message, let url):
+            let urlHint = url.isEmpty ? "" : "\nURL: \(url)"
+            return "API error (\(code)): \(message)\(urlHint)"
         case .invalidResponse:
             return "Received an invalid response from Azure OpenAI."
         case .parsingFailed(let detail):
@@ -85,15 +93,19 @@ actor AzureOpenAIService {
 
         guard httpResponse.statusCode == 200 else {
             let body = String(data: data, encoding: .utf8) ?? "No response body"
-            throw AIServiceError.apiError(statusCode: httpResponse.statusCode, message: body)
+            throw AIServiceError.apiError(statusCode: httpResponse.statusCode, message: body, url: url.absoluteString)
         }
 
         return try parseResponse(data)
     }
 
     private func buildURL() throws -> URL {
-        let urlString = "\(config.endpoint)/openai/deployments/\(config.deploymentName)/chat/completions?api-version=\(config.apiVersion)"
-        guard let url = URL(string: urlString) else {
+        guard var components = URLComponents(string: config.endpoint) else {
+            throw AIServiceError.invalidURL
+        }
+        components.path = "/openai/deployments/\(config.deploymentName)/chat/completions"
+        components.queryItems = [URLQueryItem(name: "api-version", value: config.apiVersion)]
+        guard let url = components.url else {
             throw AIServiceError.invalidURL
         }
         return url
@@ -136,7 +148,7 @@ actor AzureOpenAIService {
                 ["role": "user", "content": "Generate \(numberOfCards) flashcards about: \(topic)"]
             ],
             "temperature": 0.7,
-            "max_tokens": 4096
+            "max_completion_tokens": 4096
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

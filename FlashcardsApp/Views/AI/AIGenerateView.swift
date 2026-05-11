@@ -16,6 +16,7 @@ struct AIGenerateView: View {
     @AppStorage("azure_endpoint") private var savedEndpoint = ""
     @AppStorage("azure_api_key") private var savedApiKey = ""
     @AppStorage("azure_deployment") private var savedDeployment = ""
+    @AppStorage("azure_api_version") private var savedApiVersion = "2024-10-21"
 
     private var isConfigured: Bool {
         !savedEndpoint.isEmpty && !savedApiKey.isEmpty && !savedDeployment.isEmpty
@@ -201,7 +202,8 @@ struct AIGenerateView: View {
         let config = AzureOpenAIConfig(
             endpoint: savedEndpoint,
             apiKey: savedApiKey,
-            deploymentName: savedDeployment
+            deploymentName: savedDeployment,
+            apiVersion: savedApiVersion
         )
 
         guard config.isValid else {
@@ -234,6 +236,9 @@ struct AzureSettingsView: View {
     @AppStorage("azure_endpoint") private var endpoint = ""
     @AppStorage("azure_api_key") private var apiKey = ""
     @AppStorage("azure_deployment") private var deployment = ""
+    @AppStorage("azure_api_version") private var apiVersion = "2024-10-21"
+
+    @State private var showApiKey = false
 
     var body: some View {
         NavigationStack {
@@ -258,13 +263,34 @@ struct AzureSettingsView: View {
                 }
 
                 Section("API Key") {
-                    SecureField("Enter your API key", text: $apiKey)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    HStack {
+                        if showApiKey {
+                            TextField("Enter your API key", text: $apiKey)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                        } else {
+                            SecureField("Enter your API key", text: $apiKey)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                        }
+                        Button {
+                            showApiKey.toggle()
+                        } label: {
+                            Image(systemName: showApiKey ? "eye.slash" : "eye")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
 
                 Section("Deployment Name") {
                     TextField("e.g. gpt-4o, gpt-35-turbo", text: $deployment)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+
+                Section("API Version") {
+                    TextField("e.g. 2024-10-21", text: $apiVersion)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -284,6 +310,7 @@ struct AzureSettingsView: View {
                         endpoint = ""
                         apiKey = ""
                         deployment = ""
+                        apiVersion = "2024-10-21"
                     } label: {
                         Label("Clear Configuration", systemImage: "trash")
                     }

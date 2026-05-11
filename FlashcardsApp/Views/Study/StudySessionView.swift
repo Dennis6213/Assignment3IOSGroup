@@ -329,14 +329,16 @@ struct StudySessionView: View {
         var streak = 0
         var checkDate = calendar.startOfDay(for: Date())
         while true {
-            let dayPredicate = checkDate
+            let dayStart = checkDate
+            guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { break }
             let descriptor = FetchDescriptor<ReviewLog>(
-                predicate: #Predicate { $0.date >= dayPredicate }
+                predicate: #Predicate { $0.date >= dayStart && $0.date < dayEnd }
             )
             let count = (try? modelContext.fetchCount(descriptor)) ?? 0
-            if count == 0 && !calendar.isDateInToday(checkDate) { break }
-            if count > 0 { streak += 1 }
-            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate
+            if count == 0 { break }
+            streak += 1
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = previousDay
         }
 
         if streak > 0 && streak % 7 == 0 {

@@ -13,12 +13,12 @@ struct FriendsListView: View {
     @State private var showingLeaderboard = false
     @State private var selectedTab: FriendsTab = .friends
 
+    private var myProfile: UserProfile? { userProfiles.first }
+
     enum FriendsTab: String, CaseIterable {
         case friends = "Friends"
         case activity = "Activity"
     }
-
-    private var myProfile: UserProfile? { userProfiles.first }
 
     var body: some View {
         NavigationStack {
@@ -101,6 +101,7 @@ struct FriendsListView: View {
                     .tint(.primary)
                 }
             }
+
 
             if !sharedDecks.isEmpty {
                 sharedDecksSection
