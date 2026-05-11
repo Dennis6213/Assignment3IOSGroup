@@ -8,6 +8,8 @@ struct StudySessionView: View {
     let deck: Deck
     var practiceAll: Bool = false
 
+    @Query private var userProfiles: [UserProfile]
+
     @State private var dueCards: [Card] = []
     @State private var currentIndex: Int = 0
     @State private var isFlipped: Bool = false
@@ -259,7 +261,8 @@ struct StudySessionView: View {
             withAnimation {
                 currentIndex += 1
             }
-        } else {
+         } else {
+            logSessionActivity()
             withAnimation {
                 sessionComplete = true
             }
@@ -308,9 +311,49 @@ struct StudySessionView: View {
                 .font(.subheadline.bold())
         }
     }
+
+    private func logSessionActivity() {
+        let userName = userProfiles.first?.displayName ?? "Me"
+        let correct = grades.filter { $0 != .again }.count
+        let accuracy = grades.isEmpty ? 0 : Int(Double(correct) / Double(grades.count) * 100)
+
+        let event = ActivityEvent(
+            userName: userName,
+            eventType: "completed_session",
+            detail: "Completed \(grades.count) cards in \"\(deck.name)\" with \(accuracy)% accuracy",
+            isCurrentUser: true
+        )
+        modelContext.insert(event)
+
+        let calendar = Calendar.current
+        var streak = 0
+        var checkDate = calendar.startOfDay(for: Date())
+        while true {
+            let dayPredicate = checkDate
+            let descriptor = FetchDescriptor<ReviewLog>(
+                predicate: #Predicate { $0.date >= dayPredicate }
+            )
+            let count = (try? modelContext.fetchCount(descriptor)) ?? 0
+            if count == 0 && !calendar.isDateInToday(checkDate) { break }
+            if count > 0 { streak += 1 }
+            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate
+        }
+
+        if streak > 0 && streak % 7 == 0 {
+            let streakEvent = ActivityEvent(
+                userName: userName,
+                eventType: "streak_milestone",
+                detail: "Reached a \(streak)-day study streak! 🔥",
+                isCurrentUser: true
+            )
+            modelContext.insert(streakEvent)
+        }
+
+        try? modelContext.save()
+    }
 }
 
 #Preview {
     StudySessionView(deck: Deck(name: "Preview"))
-        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self], inMemory: true)
+        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self, UserProfile.self, Friend.self, SharedDeck.self, ActivityEvent.self], inMemory: true)
 }

@@ -9,6 +9,6 @@ struct FlashcardsApp: App {
                 .onAppear {
                 }
         }
-        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self, UserProfile.self, Friend.self, SharedDeck.self])
+        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self, UserProfile.self, Friend.self, SharedDeck.self, ActivityEvent.self])
     }
 }
