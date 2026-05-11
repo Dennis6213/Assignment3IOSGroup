@@ -110,5 +110,5 @@ struct SettingsView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self], inMemory: true)
+        .modelContainer(for: [Deck.self, Card.self, ReviewLog.self, UserProfile.self, Friend.self, SharedDeck.self, ActivityEvent.self], inMemory: true)
 }
