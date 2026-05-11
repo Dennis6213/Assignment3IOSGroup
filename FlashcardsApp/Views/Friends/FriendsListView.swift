@@ -10,6 +10,7 @@ struct FriendsListView: View {
     @State private var showingAddFriend = false
     @State private var showingMyCode = false
     @State private var showingSharedDecks = false
+    @State private var showingLeaderboard = false
     @State private var selectedTab: FriendsTab = .friends
 
     enum FriendsTab: String, CaseIterable {
@@ -54,6 +55,18 @@ struct FriendsListView: View {
             .sheet(isPresented: $showingMyCode) {
                 MyCodeView(profile: myProfile)
             }
+            .sheet(isPresented: $showingLeaderboard) {
+                NavigationStack {
+                    LeaderboardView()
+                        .navigationTitle("Leaderboard")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") { showingLeaderboard = false }
+                            }
+                        }
+                }
+            }
             .onAppear {
                 ensureProfileExists()
             }
@@ -63,6 +76,31 @@ struct FriendsListView: View {
     private var friendsContent: some View {
         List {
             myProfileSection
+
+            if !friends.isEmpty {
+                Section {
+                    Button {
+                        showingLeaderboard = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "trophy.fill")
+                                .font(.title2)
+                                .foregroundStyle(.yellow)
+                            VStack(alignment: .leading) {
+                                Text("Leaderboard")
+                                    .font(.headline)
+                                Text("See who's studying the most")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(.primary)
+                }
+            }
 
             if !sharedDecks.isEmpty {
                 sharedDecksSection
