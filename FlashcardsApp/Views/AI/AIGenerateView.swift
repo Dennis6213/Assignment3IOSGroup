@@ -236,9 +236,7 @@ struct AzureSettingsView: View {
     @AppStorage("azure_endpoint") private var endpoint = ""
     @AppStorage("azure_api_key") private var apiKey = ""
     @AppStorage("azure_deployment") private var deployment = ""
-    @State private var showApiKey = false
     @AppStorage("azure_api_version") private var apiVersion = "2024-10-21"
-
     @State private var showApiKey = false
 
     var body: some View {
@@ -278,16 +276,6 @@ struct AzureSettingsView: View {
                             showApiKey.toggle()
                         } label: {
                             Image(systemName: showApiKey ? "eye.slash" : "eye")
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                        Button {
-                            showApiKey.toggle()
-                        } label: {
-                            Image(systemName: showApiKey ? "eye.slash.fill" : "eye.fill")
                                 .foregroundStyle(.secondary)
                         }
                         .buttonStyle(.plain)

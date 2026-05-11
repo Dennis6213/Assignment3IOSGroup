@@ -2,6 +2,10 @@
 
 A SwiftUI flashcard app with spaced repetition scheduling built using SwiftData.
 
+## Repository
+
+https://github.com/Dennis6213/Assignment3IOSGroup.git
+
 ## Features
 - Create and manage flashcard decks
 - SM-2 scheduling for review intervals
