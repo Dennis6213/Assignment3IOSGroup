@@ -1,0 +1,48 @@
+[
+  {
+    "deck_name": "iOS Development Basics",
+    "description": "Key concepts for learning iOS development with Swift and SwiftUI",
+    "cards": [
+      {
+        "front": "What is SwiftUI?",
+        "back": "A declarative framework by Apple for building user interfaces across all Apple platforms using Swift code.",
+        "hint": "Declarative UI framework"
+      },
+      {
+        "front": "What does @State do in SwiftUI?",
+        "back": "A property wrapper that creates a mutable source of truth for a value type, owned by the view. When the value changes, the view re-renders.",
+        "hint": "Property wrapper for view-local state"
+      },
+      {
+        "front": "What is the difference between @State and @Binding?",
+        "back": "@State owns the data and is the source of truth. @Binding creates a two-way connection to a @State owned by a parent view — it reads and writes but doesn't own.",
+        "hint": "Ownership vs reference"
+      },
+      {
+        "front": "What is SwiftData?",
+        "back": "Apple's modern persistence framework (iOS 17+) that uses Swift macros (@Model) to define schema. It replaces Core Data for new projects.",
+        "hint": "Replaced Core Data"
+      },
+      {
+        "front": "What does the @Model macro do?",
+        "back": "Marks a Swift class as a SwiftData model, automatically generating persistence support including schema, fetching, and change tracking.",
+        "hint": "SwiftData persistence macro"
+      },
+      {
+        "front": "What is a NavigationStack?",
+        "back": "A SwiftUI container that manages a stack-based navigation flow, replacing the deprecated NavigationView. Supports value-based navigation with navigationDestination.",
+        "hint": "Stack-based navigation container"
+      },
+      {
+        "front": "What is the MVVM pattern?",
+        "back": "Model-View-ViewModel: a design pattern where the Model holds data, the View displays it, and the ViewModel transforms model data for the view and handles user actions.",
+        "hint": "Three-layer architecture pattern"
+      },
+      {
+        "front": "What is an enum in Swift?",
+        "back": "A value type that defines a group of related values. Enums in Swift can have associated values, raw values, computed properties, and methods.",
+        "hint": "Group of related values"
+      }
+    ]
+  }
+]

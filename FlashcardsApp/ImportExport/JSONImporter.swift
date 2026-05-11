@@ -118,3 +118,31 @@ enum JSONImporter {
         return deck
     }
 }
+
+
+enum JSONExporter {
+
+    static func export(deck: Deck) throws -> String {
+        let exportData = FlashcardExportData(
+            deckName: deck.name,
+            description: deck.deckDescription,
+            cards: deck.cards.map { card in
+                FlashcardExportCard(
+                    front: card.front,
+                    back: card.back,
+                    hint: card.hint
+                )
+            }
+        )
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(exportData)
+
+        guard let jsonString = String(data: data, encoding: .utf8) else {
+            throw ImportError.invalidJSON("Could not encode to UTF-8.")
+        }
+
+        return jsonString
+    }
+}
